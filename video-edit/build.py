@@ -17,7 +17,10 @@ STILLS = {
     "ADV": ("assets/adv.webp", "image/webp"),
     "LOGO": ("assets/logo_alpha.png", "image/png"),
     "LOGIN": ("assets/login.webp", "image/webp"),
-    "LOGO_HOOK": ("assets/logo_hook.png", "image/png"),
+    "LOGIN_BLUR": ("assets/login_blur.webp", "image/webp"),
+    "LOGO_HOOK": ("assets/logo_hook_pad.png", "image/png"),
+    "LOGO_SOFT": ("assets/logo_hook_soft.png", "image/png"),
+    "LOGO_GLOW": ("assets/logo_hook_glow.png", "image/png"),
 }
 VO_CHAIN = ("highpass=f=70,equalizer=f=160:t=q:w=1:g=2.5,equalizer=f=3200:t=q:w=1.2:g=3,"
             "equalizer=f=9000:t=h:w=1:g=2,acompressor=threshold=-20dB:ratio=3.5:attack=4:release=90:makeup=2,"

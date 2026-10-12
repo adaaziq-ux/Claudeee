@@ -40,7 +40,8 @@ h1 { font-family: var(--display); font-weight: 900; font-size: clamp(34px, 5vw, 
 .layer { position: absolute; inset: 0; overflow: hidden; visibility: hidden; }
 .layer.on { visibility: visible; }
 .media { position: absolute; left: 0; top: 0; transform-origin: 0 0; display: block; max-width: none; }
-.graded .media, .graded .card, .graded .endlogo { filter: url(#grade); }
+/* Preview grade uses GPU-composited CSS filters so high-res footage plays smoothly; the render uses the ffmpeg chain in the notes. */
+.graded .media, .graded .card, .graded .endlogo { filter: brightness(1.07) contrast(1.13) saturate(1.16); }
 img.media { image-rendering: auto; }
 .dim { position: absolute; inset: 0; background: #000; opacity: 0; pointer-events: none; }
 .vig { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse 75% 70% at 50% 48%, rgba(0,0,0,0) 55%, rgba(0,0,0,.55) 100%); opacity: 0; }
@@ -57,7 +58,7 @@ img.media { image-rendering: auto; }
 /* on-video type */
 .hook { position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); text-align: center; font-family: var(--display); font-weight: 900; text-transform: uppercase; color: #fff; font-size: 132px; line-height: .9; letter-spacing: .005em; opacity: 0; text-shadow: 0 6px 30px rgba(0,0,0,.65); }
 #hookLogo { position: absolute; left: 0; top: 0; opacity: 0; pointer-events: none; will-change: transform, opacity; }
-#hookLogo img { display: block; width: 100%; height: auto; max-width: none; }
+#hookLogo img { position: absolute; left: 0; top: 0; display: block; width: 100%; height: 100%; max-width: none; will-change: opacity; }
 #hookLogo .shine { position: absolute; inset: 0; background: linear-gradient(105deg, transparent 38%, rgba(255,220,130,.95) 50%, transparent 62%) 0 0 / 300% 100% no-repeat;
   -webkit-mask-size: 100% 100%; mask-size: 100% 100%; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; }
 .hook .ln { display: block; }
@@ -347,9 +348,10 @@ vignette=angle=PI/5</pre>
 
 <script>
 (() => {
-  const ASSETS = { A: "media/A.mp4", B: "media/B.mp4", C: "media/C.mp4", D: "media/D.mp4", E: "media/E.mp4", F: "media/F.mp4", G: "media/G.mp4", H: "media/H.mp4", I: "media/I.mp4", J: "media/J.mp4", BASIC: "{{BASIC}}", ADV: "{{ADV}}", LOGO: "{{LOGO}}", LOGIN: "{{LOGIN}}", LOGO_HOOK: "{{LOGO_HOOK}}" };
-  const LOGO_HOOK_AR = 473 / 530; // height / width of the hook logo PNG
-  const STILLS = { LOGIN: { w: 2000, h: 1020 } }; // stills that get camera moves like footage
+  const ASSETS = { A: "media/A.mp4", B: "media/B.mp4", C: "media/C.mp4", D: "media/D.mp4", E: "media/E.mp4", F: "media/F.mp4", G: "media/G.mp4", H: "media/H.mp4", I: "media/I.mp4", J: "media/J.mp4", BASIC: "{{BASIC}}", ADV: "{{ADV}}", LOGO: "{{LOGO}}", LOGIN: "{{LOGIN}}", LOGIN_BLUR: "{{LOGIN_BLUR}}", LOGO_HOOK: "{{LOGO_HOOK}}", LOGO_SOFT: "{{LOGO_SOFT}}", LOGO_GLOW: "{{LOGO_GLOW}}" };
+  // hook logo PNGs share one padded 626x569 canvas (sharp, out-of-focus, gold glow), pre-rendered so nothing is blurred live
+  const LOGO_HOOK_AR = 569 / 626, LOGO_ART = 530 / 626; // canvas height/width, logo art share of the width
+  const STILLS = { LOGIN: { w: 2000, h: 1020 }, LOGIN_BLUR: { w: 2000, h: 1020 } }; // stills that get camera moves like footage
   const W = 1280, H = 720;
   const MEDIA = { A: { w: 2552, h: 1302 }, B: { w: 1270, h: 782 }, C: { w: 1222, h: 788 }, D: { w: 2554, h: 1300 }, E: { w: 2556, h: 1306 }, F: { w: 2556, h: 1306 }, G: { w: 2554, h: 1302 }, H: { w: 2552, h: 1304 }, I: { w: 2558, h: 1302 }, J: { w: 2558, h: 1304 } };
   // English AI voiceover (Kokoro TTS): one body track + one track per hook variant, per voice
@@ -367,7 +369,7 @@ vignette=angle=PI/5</pre>
   // cam keys: [time from shot start, scale, focusX, focusY] in source-frame coords. xf = crossfade-in length.
   const SEG_DUR = {{SEG_DUR}};
   const SEGS = [
-    { id: "hook", label: "Hook", still: "LOGIN", blur: 22,
+    { id: "hook", label: "Hook", still: "LOGIN_BLUR",
       cam: [[0, 1.12, .5, .5], [3.6, 1.22, .5, .5]], dim: .55,
       desc: "Logo LAB reveal (zoom + blur → tajam, impact, glow emas, light sweep) atas latar halaman login yang di-blur. Hujung hook: logo terbang dan mengecil tepat ke logo dalam kad login scene seterusnya (match cut).",
       text: "Hook 2 baris, setiap baris dipegang ~1.5s", sfx: "Impact · whoosh · riser ke potongan" },
@@ -451,6 +453,7 @@ vignette=angle=PI/5</pre>
   const DUR = SEGS[SEGS.length - 1].t1, END_T0 = SEG.end.t0;
   const at = (id, off) => off < 0 ? SEG[id].t1 + off : SEG[id].t0 + off; // negative offset = from shot end
   const HOOK_LINES = [[.4, 1.7], [1.8, 3.2]];
+  const REST_T = 1.2; // frame shown before the first Play: logo landed, first hook line up
   const LOGO_LAND = .45, LOGO_MOVE = [3.05, .55]; // hook-relative: logo lands, then flies into the login card (start, length)
 
   const TEXTS = [
@@ -602,7 +605,8 @@ vignette=angle=PI/5</pre>
     fixCounters(); if (document.fonts) document.fonts.ready.then(fixCounters);
     for (const r of RINGS) { const el = document.createElement("div"); el.className = "ring"; fx.appendChild(el); r.el = el; }
     const hl = document.createElement("div"); hl.id = "hookLogo";
-    hl.innerHTML = `<img alt="" src="${ASSETS.LOGO_HOOK}"><div class="shine"></div>`;
+    hl.innerHTML = `<img alt="" src="${ASSETS.LOGO_GLOW}"><img alt="" src="${ASSETS.LOGO_HOOK}"><img alt="" src="${ASSETS.LOGO_SOFT}"><div class="shine"></div>`;
+    [hl.glow, hl.sharp, hl.soft] = hl.querySelectorAll("img");
     hl.lastChild.style.webkitMaskImage = hl.lastChild.style.maskImage = `url(${ASSETS.LOGO_HOOK})`;
     txt.prepend(hl);
     buildHook();
@@ -683,12 +687,12 @@ vignette=angle=PI/5</pre>
           cx = lerp(cx, P.x + .4977 * MEDIA.A.w * P.sc, mv); cy = lerp(cy, P.y + .359 * MEDIA.A.h * P.sc, mv);
           w = lerp(w, .046 * MEDIA.A.w * P.sc, mv);
         }
-        const hgt = w * LOGO_HOOK_AR;
+        const cw = w / LOGO_ART, ch = cw * LOGO_HOOK_AR; // w is the logo art width; the canvas carries padding for the glow
         const glow = Math.max(Math.max(0, 1 - Math.abs(ht - LOGO_LAND) / .6), bump * .8) * (1 - mv);
-        hl.style.width = w + "px";
-        hl.style.transform = `translate(${cx - w / 2}px,${cy - hgt / 2}px)`;
+        hl.style.width = cw + "px"; hl.style.height = ch + "px";
+        hl.style.transform = `translate(${cx - cw / 2}px,${cy - ch / 2}px)`;
         hl.style.opacity = clamp(ht / .3, 0, 1) * (1 - clamp((t - L.t0) / .3, 0, 1));
-        hl.firstChild.style.filter = `blur(${(1 - land) * 14}px) drop-shadow(0 0 ${8 + 30 * glow}px rgba(246,196,26,${.25 + .55 * glow}))`;
+        hl.soft.style.opacity = 1 - land; hl.sharp.style.opacity = land; hl.glow.style.opacity = .25 + .75 * glow;
         const sp = clamp((ht - .35) / .8, 0, 1);
         hl.lastChild.style.backgroundPosition = `${lerp(120, -20, sp)}% 0`; hl.lastChild.style.opacity = sp > 0 && sp < 1 ? 1 : 0;
       }
@@ -830,11 +834,12 @@ vignette=angle=PI/5</pre>
   }
 
   // ---------- transport ----------
-  let cur = 0.9, startT = 0, startClock = 0, raf = 0;
+  let cur = REST_T, fresh = true, startT = 0, startClock = 0, raf = 0; // fresh: nothing scrubbed yet, so Play starts from 0
   const clockNow = () => ctx ? ctx.currentTime : performance.now() / 1000;
   function play() {
     ensureCtx(); ctx.resume();
-    if (cur >= DUR - .05) cur = 0;
+    if (fresh || cur >= DUR - .05) cur = 0;
+    fresh = false;
     playing = true; newBus();
     startClock = ctx.currentTime + .06; startT = cur;
     scheduleFrom(cur, startClock);
@@ -852,7 +857,7 @@ vignette=angle=PI/5</pre>
     if (cur >= DUR) { cur = DUR; render(cur); pause(); $("bigplay").hidden = false; return; }
     render(cur); raf = requestAnimationFrame(tick);
   }
-  function seek(t) { $("bigplay").hidden = true; const was = playing; if (was) { playing = false; killBus(); SEGS.forEach(s => s.v && s.v.pause()); } cur = clamp(t, 0, DUR); render(cur); if (was) play(); }
+  function seek(t) { fresh = false; $("bigplay").hidden = true; const was = playing; if (was) { playing = false; killBus(); SEGS.forEach(s => s.v && s.v.pause()); } cur = clamp(t, 0, DUR); render(cur); if (was) play(); }
 
   // ---------- UI wiring ----------
   function fitStage() { const w = $("stageWrap").clientWidth; stage.style.transform = `scale(${w / W})`; }
@@ -881,7 +886,7 @@ vignette=angle=PI/5</pre>
     });
   }
   function setGrade(on) { stage.classList.toggle("graded", on); $("gradeBtn").setAttribute("aria-pressed", on); $("tag").textContent = on ? "GRADE ON" : "ASAL (TANPA GRADE)"; render(cur); }
-  function setHook(k) { hookKey = k; $("hookSel").value = k; document.querySelectorAll('input[name=hook]').forEach(r => r.checked = r.value === k); buildHook(); seek(0.9); }
+  function setHook(k) { hookKey = k; $("hookSel").value = k; document.querySelectorAll('input[name=hook]').forEach(r => r.checked = r.value === k); buildHook(); seek(REST_T); fresh = !playing; }
 
   $("play").addEventListener("click", () => playing ? pause() : play());
   $("bigplay").addEventListener("click", play);
