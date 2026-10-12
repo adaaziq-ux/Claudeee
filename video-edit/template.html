@@ -802,13 +802,16 @@ vignette=angle=PI/5</pre>
       for (const fq of o.f) for (const det of [-7, 7]) { const a = osc("sawtooth", at, o.d); a.frequency.value = fq; a.detune.value = det; a.connect(f); } }
   };
   const voBuf = {};
-  async function loadVoice(v) {
-    if (v === "off" || voBuf[v]) return;
-    ensureCtx(); voBuf[v] = {};
-    await Promise.all(Object.entries(VO_FILES[v]).map(async ([k, path]) => {
-      try { const r = await fetch(path); voBuf[v][k] = await ctx.decodeAudioData(await r.arrayBuffer()); } catch (e) { console.warn("VO not loaded", path); }
-    }));
-    if (playing) seek(cur);
+  const voLoading = {};
+  function loadVoice(v) { // one decode per voice; later callers await the same promise
+    if (v === "off") return Promise.resolve();
+    return voLoading[v] || (voLoading[v] = (async () => {
+      ensureCtx(); voBuf[v] = {};
+      await Promise.all(Object.entries(VO_FILES[v]).map(async ([k, path]) => {
+        try { const r = await fetch(path); voBuf[v][k] = await ctx.decodeAudioData(await r.arrayBuffer()); } catch (e) { console.warn("VO not loaded", path); }
+      }));
+      if (playing) seek(cur);
+    })());
   }
   function playBuf(buf, t0, audioStart) {
     if (!buf || t0 >= buf.duration) return;
@@ -858,6 +861,37 @@ vignette=angle=PI/5</pre>
     render(cur); raf = requestAnimationFrame(tick);
   }
   function seek(t) { fresh = false; $("bigplay").hidden = true; const was = playing; if (was) { playing = false; killBus(); SEGS.forEach(s => s.v && s.v.pause()); } cur = clamp(t, 0, DUR); render(cur); if (was) play(); }
+
+  // ---------- offline render hooks (used by render.js; harmless in the viewer) ----------
+  window.__lab = {
+    duration: () => DUR,
+    // draw time t and resolve once every visible video has finished seeking to its frame
+    async frame(t) {
+      fresh = false; cur = t; render(t);
+      await Promise.all(SEGS.filter(s => s.v && s.el.classList.contains("on")).map(s => new Promise(res => {
+        const v = s.v, ok = () => !v.seeking && v.readyState >= 2;
+        if (ok()) return res();
+        const done = () => { if (ok()) { v.removeEventListener("seeked", done); v.removeEventListener("loadeddata", done); res(); } };
+        v.addEventListener("seeked", done); v.addEventListener("loadeddata", done);
+      })));
+      await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+    },
+    // render the full mix (VO + music + SFX) offline and return a 16-bit stereo WAV as base64
+    async audio(v = "male", sr = 48000) {
+      ensureCtx(); await loadVoice(v);
+      const live = ctx, off = new OfflineAudioContext(2, Math.ceil(sr * DUR), sr);
+      voice = v; ctx = off; newBus(); scheduleFrom(0, 0);
+      const buf = await off.startRendering(); ctx = live; bus = null;
+      const n = buf.length, L = buf.getChannelData(0), R = buf.getChannelData(1), out = new DataView(new ArrayBuffer(44 + n * 4));
+      const str = (o, s) => { for (let i = 0; i < s.length; i++) out.setUint8(o + i, s.charCodeAt(i)); };
+      str(0, "RIFF"); out.setUint32(4, 36 + n * 4, true); str(8, "WAVEfmt "); out.setUint32(16, 16, true); out.setUint16(20, 1, true); out.setUint16(22, 2, true);
+      out.setUint32(24, sr, true); out.setUint32(28, sr * 4, true); out.setUint16(32, 4, true); out.setUint16(34, 16, true); str(36, "data"); out.setUint32(40, n * 4, true);
+      for (let i = 0; i < n; i++) { out.setInt16(44 + i * 4, clamp(L[i], -1, 1) * 32767, true); out.setInt16(46 + i * 4, clamp(R[i], -1, 1) * 32767, true); }
+      const bytes = new Uint8Array(out.buffer); let s = "";
+      for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+      return btoa(s);
+    }
+  };
 
   // ---------- UI wiring ----------
   function fitStage() { const w = $("stageWrap").clientWidth; stage.style.transform = `scale(${w / W})`; }
