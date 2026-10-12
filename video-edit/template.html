@@ -158,12 +158,12 @@ pre { font-family: var(--mono); font-size: 12px; background: #0a0907; border: 1p
 <main class="wrap">
   <header class="top">
     <div>
-      <div class="eyebrow">The LAB Academy · Promo edit v3</div>
+      <div class="eyebrow">The LAB Academy · Promo edit v4</div>
       <h1>Preview edit, sebelum render</h1>
     </div>
     <div class="status">
       <span class="chip warn">BELUM RENDER</span>
-      <span class="chip">16:9 · 1280×720 preview</span>
+      <span class="chip">16:9 · footage resolusi asal</span><span class="chip">VO English</span>
       <span class="chip">37.0s</span>
     </div>
   </header>
@@ -192,6 +192,12 @@ pre { font-family: var(--mono); font-size: 12px; background: #0a0907; border: 1p
         <button class="ctl" id="gradeBtn" type="button" aria-pressed="true" title="Shortcut: G">Color grade</button>
         <button class="ctl" id="sfxBtn" type="button" aria-pressed="true">SFX</button>
         <button class="ctl" id="musicBtn" type="button" aria-pressed="true">Muzik (temp)</button>
+        <label class="hint" for="voiceSel">Suara</label>
+        <select class="ctl" id="voiceSel">
+          <option value="male">VO lelaki (Michael)</option>
+          <option value="female">VO perempuan (Heart)</option>
+          <option value="off">Tanpa VO</option>
+        </select>
         <label class="hint" for="hookSel">Hook</label>
         <select class="ctl" id="hookSel">
           <option value="A">A · Trade ikut feeling?</option>
@@ -288,6 +294,17 @@ pre { font-family: var(--mono); font-size: 12px; background: #0a0907; border: 1p
       </div>
     </div>
 
+    <div class="panel wide">
+      <h2>Voiceover (English, AI)</h2>
+      <p class="lead">Suara dijana dengan Kokoro TTS (model open-source, lesen Apache 2.0) dan diproses macam VO iklan: EQ untuk badan dan kejelasan, compressor, sedikit ruang, loudness −16 LUFS. Muzik automatik turun bila suara masuk.</p>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Masa</th><th>Shot</th><th>Skrip</th></tr></thead>
+          <tbody id="voRows"></tbody>
+        </table>
+      </div>
+    </div>
+
     <div class="panel">
       <h2>Color grade &amp; lighting</h2>
       <p class="lead">UI asal sangat gelap dan flat. Grade ni buka midtone tanpa naikkan hitam, supaya nampak premium tapi warna brand kekal.</p>
@@ -311,7 +328,8 @@ vignette=angle=PI/5</pre>
       <ol class="asks">
         <li><strong>Hook mana?</strong> A, B atau C (tukar kat dropdown atas untuk tengok).</li>
         <li><strong>Format:</strong> kekal 16:9 (YouTube) atau aku buat versi 9:16 untuk Reels/TikTok? Footage desktop ni lebar, jadi 9:16 perlukan lebih banyak zoom dan pan.</li>
-        <li><strong>Muzik:</strong> beat dalam preview ni synth sementara aku jana sendiri. Ada track berlesen kau nak guna, atau nak aku tambah voiceover?</li>
+        <li><strong>Suara:</strong> lelaki atau perempuan? Tukar kat dropdown "Suara" atas untuk dengar dua-dua.</li>
+        <li><strong>Muzik:</strong> beat dalam preview ni synth sementara aku jana sendiri. Ada track berlesen kau nak guna?</li>
         <li><strong>Performance:</strong> rakaman 1.7 diambil sebelum ada trade, jadi semua nilai $0 dan carta kosong. Aku cuma guna 1.2s zoom ke tab carta. Kalau kau rakam semula selepas tambah beberapa trade, shot ni boleh jadi salah satu yang paling kuat.</li>
         <li><strong>CTA:</strong> "Daftar sekarang · Link di bio" OK, atau nak letak URL / harga / tarikh intake?</li>
       </ol>
@@ -321,9 +339,13 @@ vignette=angle=PI/5</pre>
 
 <script>
 (() => {
-  const ASSETS = { A: "{{A}}", B: "{{B}}", C: "{{C}}", D: "{{D}}", E: "{{E}}", F: "{{F}}", G: "{{G}}", H: "{{H}}", I: "{{I}}", J: "{{J}}", BASIC: "{{BASIC}}", ADV: "{{ADV}}", LOGO: "{{LOGO}}" };
+  const ASSETS = { A: "media/A.mp4", B: "media/B.mp4", C: "media/C.mp4", D: "media/D.mp4", E: "media/E.mp4", F: "media/F.mp4", G: "media/G.mp4", H: "media/H.mp4", I: "media/I.mp4", J: "media/J.mp4", BASIC: "{{BASIC}}", ADV: "{{ADV}}", LOGO: "{{LOGO}}" };
   const W = 1280, H = 720, DUR = 37.0, END_T0 = 34.0;
-  const MEDIA = { A: { w: 1280, h: 654 }, B: { w: 1270, h: 782 }, C: { w: 1280, h: 826 }, D: { w: 1280, h: 652 }, E: { w: 1280, h: 654 }, F: { w: 1280, h: 654 }, G: { w: 1280, h: 652 }, H: { w: 1280, h: 654 }, I: { w: 1280, h: 652 }, J: { w: 1280, h: 652 } };
+  const MEDIA = { A: { w: 2552, h: 1302 }, B: { w: 1270, h: 782 }, C: { w: 1222, h: 788 }, D: { w: 2554, h: 1300 }, E: { w: 2556, h: 1306 }, F: { w: 2556, h: 1306 }, G: { w: 2554, h: 1302 }, H: { w: 2552, h: 1304 }, I: { w: 2558, h: 1302 }, J: { w: 2558, h: 1304 } };
+  // English AI voiceover (Kokoro TTS): one body track + one track per hook variant, per voice
+  const VO_FILES = {};
+  for (const v of ["male", "female"]) { VO_FILES[v] = { body: `media/vo_${v}_body.mp3` }; for (const k of "ABC") VO_FILES[v]["hook" + k] = `media/vo_${v}_hook${k}.mp3`; }
+  const VO_TL = {{VO_TL}};
 
   const HOOKS = {
     A: [["MASIH TRADE", "IKUT FEELING?"], ["13 MODUL.", "1 STRATEGI: BMB."]],
@@ -334,7 +356,7 @@ vignette=angle=PI/5</pre>
   // ---- Edit decision list. cam keys: [time from shot start, scale, focusX, focusY] in source-frame coords.
   const SEGS = [
     { id: "hook", label: "Hook", t0: 0, t1: 3.0, media: "B", in: 0.6, rate: 1,
-      cam: [[0, 2.45, .35, .45], [3.0, 2.0, .35, .49]], dim: .66,
+      cam: [[0, 2.0, .35, .46], [3.0, 1.75, .35, .49]], dim: .66,
       desc: "Video 1.3 (00.60–03.60). Zoom rapat ke whiteboard, digelapkan 66%, slow pull-out. Camera shake atas impact.",
       text: "Hook 2 baris, punch masuk satu-satu perkataan", sfx: "Impact · whoosh · riser ke potongan" },
     { id: "login", label: "01 Login", t0: 3.0, t1: 4.25, media: "A", in: 1.3, rate: 1,
@@ -358,11 +380,11 @@ vignette=angle=PI/5</pre>
       desc: "Gambar 3. Kad masuk berperingkat, kad BMB Naga ditonjolkan dengan outline emas.",
       text: "6 TOPIK ADVANCE", sfx: "Whoosh · pop setiap kad · ding" },
     { id: "module", label: "03 Modul", t0: 12.5, t1: 15.5, media: "B", in: 0.2, rate: 1,
-      cam: [[0, 1.02, .5, .5], [1.0, 1.65, .35, .48], [3.0, 1.72, .35, .48]],
+      cam: [[0, 1.02, .5, .5], [1.0, 1.5, .35, .48], [3.0, 1.55, .35, .48]],
       desc: "Video 1.3 (00.20–03.20). Modul Basic 'What is a breakout?'. Push-in ke tulisan tangan.",
       text: "03 Video penuh setiap modul", sfx: "Whoosh" },
     { id: "vr", label: "VR Seq", t0: 15.5, t1: 18.0, media: "C", in: 7.2, rate: 1,
-      cam: [[0, 1.05, .5, .5], [0.7, 1.6, .38, .45], [1.4, 1.6, .38, .45], [1.9, 1.75, .8, .36], [2.5, 1.8, .8, .37]],
+      cam: [[0, 1.05, .5, .5], [0.7, 1.45, .38, .45], [1.4, 1.45, .38, .45], [1.9, 1.6, .8, .36], [2.5, 1.62, .8, .37]],
       desc: "Video 1.5 (07.20–09.70). Modul Advance 'VR Sequence': carta H1→M30→M15→M5, kemudian pan ke SOP checklist.",
       text: "+ SOP checklist setiap modul", sfx: "Whoosh · pop" },
     { id: "j1", label: "04 Journal", t0: 18.0, t1: 19.1, media: "D", in: 4.6, rate: 1,
@@ -475,6 +497,10 @@ vignette=angle=PI/5</pre>
   const eout = p => 1 - Math.pow(1 - p, 3);
   const back = p => { const c = 1.9; return 1 + (c + 1) * Math.pow(p - 1, 3) + c * Math.pow(p - 1, 2); };
   const fmt = t => { const m = Math.floor(t / 60), s = t - m * 60; return String(m).padStart(2, "0") + ":" + s.toFixed(1).padStart(4, "0"); };
+  async function mediaUrl(path) {
+    try { const r = await fetch(path); if (!r.ok) throw new Error(r.status); return URL.createObjectURL(await r.blob()); }
+    catch (e) { return path; } // file:// or blocked fetch: let the element load it directly
+  }
   function b64ToBlobUrl(dataUri) {
     const [head, b64] = dataUri.split(",");
     const mime = head.slice(5).split(";")[0];
@@ -649,7 +675,7 @@ vignette=angle=PI/5</pre>
   }
 
   // ---------- audio (synthesised temp SFX + music bed) ----------
-  let ctx = null, bus = null, sfxBus = null, musBus = null, noise = null;
+  let ctx = null, bus = null, sfxBus = null, musBus = null, voBus = null, noise = null, voice = "male";
   let sfxOn = true, musicOn = true;
   function ensureCtx() {
     if (ctx) return;
@@ -660,8 +686,10 @@ vignette=angle=PI/5</pre>
   function newBus() {
     const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -14; comp.ratio.value = 4; comp.connect(ctx.destination);
     bus = ctx.createGain(); bus.gain.value = .9; bus.connect(comp); bus._comp = comp;
-    sfxBus = ctx.createGain(); sfxBus.gain.value = sfxOn ? 1 : 0; sfxBus.connect(bus);
-    musBus = ctx.createGain(); musBus.gain.value = musicOn ? .55 : 0; musBus.connect(bus);
+    const vo = voice !== "off";
+    sfxBus = ctx.createGain(); sfxBus.gain.value = sfxOn ? (vo ? .6 : 1) : 0; sfxBus.connect(bus);
+    musBus = ctx.createGain(); musBus.gain.value = musicOn ? (vo ? .42 : .55) : 0; musBus.connect(bus);
+    voBus = ctx.createGain(); voBus.gain.value = 1.15; voBus.connect(bus);
   }
   function killBus() { if (!bus) return; const b = bus; b.gain.setValueAtTime(0, ctx.currentTime); setTimeout(() => { try { b.disconnect(); b._comp.disconnect(); } catch (e) {} }, 50); bus = null; }
   const env = (g, at, peak, a, r) => { g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(peak, at + a); g.gain.exponentialRampToValueAtTime(0.0001, at + a + r); };
@@ -703,7 +731,31 @@ vignette=angle=PI/5</pre>
       g.gain.setValueAtTime(.0001, at); g.gain.exponentialRampToValueAtTime(.09, at + .8); g.gain.setValueAtTime(.09, at + o.d - .6); g.gain.exponentialRampToValueAtTime(.0001, at + o.d);
       for (const fq of o.f) for (const det of [-7, 7]) { const a = osc("sawtooth", at, o.d); a.frequency.value = fq; a.detune.value = det; a.connect(f); } }
   };
+  const voBuf = {};
+  async function loadVoice(v) {
+    if (v === "off" || voBuf[v]) return;
+    ensureCtx(); voBuf[v] = {};
+    await Promise.all(Object.entries(VO_FILES[v]).map(async ([k, path]) => {
+      try { const r = await fetch(path); voBuf[v][k] = await ctx.decodeAudioData(await r.arrayBuffer()); } catch (e) { console.warn("VO not loaded", path); }
+    }));
+    if (playing) seek(cur);
+  }
+  function playBuf(buf, t0, audioStart) {
+    if (!buf || t0 >= buf.duration) return;
+    const s = ctx.createBufferSource(); s.buffer = buf; s.connect(voBus); s.start(audioStart, Math.max(0, t0));
+  }
   function scheduleFrom(t0, audioStart) {
+    if (voice !== "off" && voBuf[voice]) {
+      const B = voBuf[voice]; playBuf(B.body, t0, audioStart); playBuf(B["hook" + hookKey], t0, audioStart);
+      // duck the music under every VO line
+      const base = musBus.gain.value;
+      for (const l of VO_TL) {
+        if (l.id[0] === "h" && l.id[1] !== hookKey) continue;
+        const e = l.start + (voice === "male" ? l.dur : l.durF); if (e < t0) continue;
+        musBus.gain.setTargetAtTime(base * .4, audioStart + Math.max(0, l.start - t0 - .12), .05);
+        musBus.gain.setTargetAtTime(base, audioStart + (e - t0) + .1, .25);
+      }
+    }
     for (const e of SFX) if (e.t >= t0 - .01) SYN[e.k](audioStart + (e.t - t0), e, sfxBus);
     for (const e of musicEvents()) {
       if (e.t >= t0 - .01) MUS[e.k](audioStart + (e.t - t0), e, musBus);
@@ -746,6 +798,14 @@ vignette=angle=PI/5</pre>
       b.addEventListener("click", () => seek(s.t0 + .02)); strip.appendChild(b);
     });
     const ticks = $("ticks"); SFX.forEach(e => { const i = document.createElement("i"); i.style.left = (e.t / DUR * 100) + "%"; ticks.appendChild(i); });
+    const vr = $("voRows");
+    VO_TL.forEach(l => {
+      const tr = document.createElement("tr"); tr.style.cursor = "pointer";
+      const seg = l.id[0] === "h" ? `Hook ${l.id[1]}` : (SEGS.filter(s => s.t0 <= l.start + .05 && !/^(\d×|Klik|Masuk)$/.test(s.label)).pop() || SEGS[0]).label;
+      tr.innerHTML = `<td class="tc">${l.start.toFixed(2)}</td><td>${seg}</td><td>${l.text.replace(/B M B/g, "BMB").replace(/S O P/g, "SOP")}</td>`;
+      tr.addEventListener("click", () => { if (l.id[0] === "h") setHook(l.id[1]); seek(l.start); });
+      vr.appendChild(tr);
+    });
     const tb = document.querySelector("#edl tbody");
     SEGS.forEach(s => {
       const tr = document.createElement("tr"); tr.style.cursor = "pointer";
@@ -761,8 +821,9 @@ vignette=angle=PI/5</pre>
   $("bigplay").addEventListener("click", play);
   $("restart").addEventListener("click", () => { seek(0); if (!playing) play(); });
   $("gradeBtn").addEventListener("click", () => setGrade(!stage.classList.contains("graded")));
-  $("sfxBtn").addEventListener("click", e => { sfxOn = !sfxOn; e.currentTarget.setAttribute("aria-pressed", sfxOn); if (sfxBus) sfxBus.gain.value = sfxOn ? 1 : 0; });
-  $("musicBtn").addEventListener("click", e => { musicOn = !musicOn; e.currentTarget.setAttribute("aria-pressed", musicOn); if (musBus) musBus.gain.value = musicOn ? .55 : 0; });
+  $("sfxBtn").addEventListener("click", e => { sfxOn = !sfxOn; e.currentTarget.setAttribute("aria-pressed", sfxOn); if (playing) seek(cur); });
+  $("musicBtn").addEventListener("click", e => { musicOn = !musicOn; e.currentTarget.setAttribute("aria-pressed", musicOn); if (playing) seek(cur); });
+  $("voiceSel").addEventListener("change", e => { voice = e.target.value; loadVoice(voice); if (playing) seek(cur); });
   $("hookSel").addEventListener("change", e => setHook(e.target.value));
   document.querySelectorAll('input[name=hook]').forEach(r => r.addEventListener("change", () => setHook(r.value)));
   $("scrub").addEventListener("input", e => seek(+e.target.value));
@@ -776,13 +837,18 @@ vignette=angle=PI/5</pre>
   new ResizeObserver(fitStage).observe($("stageWrap"));
 
   // ---------- boot ----------
-  for (const k of Object.keys(MEDIA)) urls[k] = b64ToBlobUrl(ASSETS[k]);
-  build(); buildStrip(); fitStage();
-  const vids = SEGS.filter(s => s.v).map(s => s.v);
-  let ready = 0;
-  const done = () => { $("loading").hidden = true; render(cur); };
-  vids.forEach(v => v.addEventListener("loadeddata", () => { if (++ready === vids.length) done(); }, { once: true }));
-  setTimeout(done, 4000);
-  render(cur);
+  buildStrip(); fitStage();
+  (async () => {
+    const keys = Object.keys(MEDIA); let got = 0;
+    await Promise.all(keys.map(async k => { urls[k] = await mediaUrl(ASSETS[k]); $("loading").textContent = `Loading footage… ${++got}/${keys.length}`; }));
+    build();
+    const vids = SEGS.filter(s => s.v).map(s => s.v);
+    let ready = 0;
+    const done = () => { $("loading").hidden = true; render(cur); };
+    vids.forEach(v => v.addEventListener("loadeddata", () => { if (++ready === vids.length) done(); }, { once: true }));
+    setTimeout(done, 6000);
+    render(cur);
+    loadVoice(voice);
+  })();
 })();
 </script>
