@@ -1,0 +1,16 @@
+{
+  "_comment": "Single source of timing: shot order and duration (s), and where each VO line sits (shot + offset). build.py mixes the VO from this and injects it into the page.",
+  "shots": [
+    ["hook", 3.6], ["login", 1.8], ["landing", 0.8], ["landing2", 0.9], ["strategy", 4.0],
+    ["basic", 3.6], ["advance", 3.2], ["module", 3.6], ["vr", 3.4],
+    ["j1", 1.6], ["j2", 2.0], ["j3", 3.0], ["perf", 1.8],
+    ["lot1", 1.0], ["lot2", 2.8], ["pl", 2.6], ["comp", 2.6],
+    ["cur", 3.0], ["cur2", 1.2], ["news", 2.6], ["end", 3.8]
+  ],
+  "vo": {
+    "hA1": ["hook", 0.1], "hA2": ["hook", 1.85], "hB1": ["hook", 0.1], "hB2": ["hook", 1.85], "hC1": ["hook", 0.1], "hC2": ["hook", 1.85],
+    "b01": ["login", 0.5], "b02": ["strategy", 0.4], "b03": ["basic", 0.45], "b04": ["advance", 0.45],
+    "b05": ["module", 0.3], "b06": ["vr", 0.5], "b07": ["j1", 0.3], "b08": ["j3", 0.6], "b09": ["perf", 0.2],
+    "b10": ["lot1", 0.15], "b11": ["pl", 0.3], "b12": ["cur", 0.3], "b13": ["cur2", 0.15], "b14": ["end", 0.45]
+  }
+}
