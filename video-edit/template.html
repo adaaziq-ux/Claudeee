@@ -56,6 +56,10 @@ img.media { image-rendering: auto; }
 
 /* on-video type */
 .hook { position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); text-align: center; font-family: var(--display); font-weight: 900; text-transform: uppercase; color: #fff; font-size: 132px; line-height: .9; letter-spacing: .005em; opacity: 0; text-shadow: 0 6px 30px rgba(0,0,0,.65); }
+#hookLogo { position: absolute; left: 0; top: 0; opacity: 0; pointer-events: none; will-change: transform, opacity; }
+#hookLogo img { display: block; width: 100%; height: auto; max-width: none; }
+#hookLogo .shine { position: absolute; inset: 0; background: linear-gradient(105deg, transparent 38%, rgba(255,220,130,.95) 50%, transparent 62%) 0 0 / 300% 100% no-repeat;
+  -webkit-mask-size: 100% 100%; mask-size: 100% 100%; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; }
 .hook .ln { display: block; }
 .hook.low { top: auto; bottom: 34px; transform: none; font-size: 104px; line-height: .92; }
 .hook .ln.gold { color: var(--gold); }
@@ -270,7 +274,8 @@ pre { font-family: var(--mono); font-size: 12px; background: #0a0907; border: 1p
             <tr><td>Gambar 2</td><td class="tc">still</td><td>Basic Topic Syllabus, 7 kad (1/7 siap)</td><td><span class="pill keep">GUNA · kad dipecah satu-satu</span></td></tr>
             <tr><td>Gambar 3</td><td class="tc">still</td><td>Advance Topic Syllabus, 6 kad</td><td><span class="pill keep">GUNA · kad dipecah satu-satu</span></td></tr>
             <tr><td>Gambar 1</td><td class="tc">still</td><td>Halaman Strategy penuh</td><td><span class="pill cut">TAK GUNA · ulang video 3</span></td></tr>
-            <tr><td>Gambar 4</td><td class="tc">still</td><td>Halaman login website (Portal Sign In), borang kosong</td><td><span class="pill keep">GUNA · latar hook</span></td></tr>
+            <tr><td>Gambar 4</td><td class="tc">still</td><td>Halaman login website (Portal Sign In), borang kosong</td><td><span class="pill keep">GUNA · latar hook (blur)</span></td></tr>
+            <tr><td>Logo PNG</td><td class="tc">still</td><td>Logo The LAB Academy, putih atas latar lutsinar</td><td><span class="pill keep">GUNA · reveal hook + match cut ke login</span></td></tr>
           </tbody>
         </table>
       </div>
@@ -289,7 +294,7 @@ pre { font-family: var(--mono); font-size: 12px; background: #0a0907; border: 1p
 
     <div class="panel">
       <h2>Pilihan hook</h2>
-      <p class="lead">3.6 saat pertama. Latar: halaman login website. Kad Portal Sign In di atas dengan slow push-in, teks hook di bawah supaya website kekal nampak. Teks punch masuk atas impact.</p>
+      <p class="lead">3.6 saat pertama. Logo LAB masuk dari besar dan kabur, mendarat tajam dengan impact dan glow emas, light sweep merentas logo. Latar: halaman login website yang di-blur. Di hujung hook, logo terbang ke logo dalam kad login scene seterusnya. Teks punch masuk atas impact.</p>
       <div class="hooks" id="hookList">
         <label><input type="radio" name="hook" value="A" checked> <span><strong>Masih trade ikut feeling? → Your trading one pit stop centre.</strong><small>Sasar trader yang belum ada sistem, dan terus jual idea semua tools dalam satu tempat.</small></span></label>
         <label><input type="radio" name="hook" value="B"> <span><strong>Breakout kau selalu fake? → Belajar baca breakout betul.</strong><small>Paling tajam. Kena terus dengan modul "What is a breakout?" dan checklist "Avoid Fakeouts".</small></span></label>
@@ -342,7 +347,8 @@ vignette=angle=PI/5</pre>
 
 <script>
 (() => {
-  const ASSETS = { A: "media/A.mp4", B: "media/B.mp4", C: "media/C.mp4", D: "media/D.mp4", E: "media/E.mp4", F: "media/F.mp4", G: "media/G.mp4", H: "media/H.mp4", I: "media/I.mp4", J: "media/J.mp4", BASIC: "{{BASIC}}", ADV: "{{ADV}}", LOGO: "{{LOGO}}", LOGIN: "{{LOGIN}}" };
+  const ASSETS = { A: "media/A.mp4", B: "media/B.mp4", C: "media/C.mp4", D: "media/D.mp4", E: "media/E.mp4", F: "media/F.mp4", G: "media/G.mp4", H: "media/H.mp4", I: "media/I.mp4", J: "media/J.mp4", BASIC: "{{BASIC}}", ADV: "{{ADV}}", LOGO: "{{LOGO}}", LOGIN: "{{LOGIN}}", LOGO_HOOK: "{{LOGO_HOOK}}" };
+  const LOGO_HOOK_AR = 473 / 530; // height / width of the hook logo PNG
   const STILLS = { LOGIN: { w: 2000, h: 1020 } }; // stills that get camera moves like footage
   const W = 1280, H = 720;
   const MEDIA = { A: { w: 2552, h: 1302 }, B: { w: 1270, h: 782 }, C: { w: 1222, h: 788 }, D: { w: 2554, h: 1300 }, E: { w: 2556, h: 1306 }, F: { w: 2556, h: 1306 }, G: { w: 2554, h: 1302 }, H: { w: 2552, h: 1304 }, I: { w: 2558, h: 1302 }, J: { w: 2558, h: 1304 } };
@@ -361,14 +367,14 @@ vignette=angle=PI/5</pre>
   // cam keys: [time from shot start, scale, focusX, focusY] in source-frame coords. xf = crossfade-in length.
   const SEG_DUR = {{SEG_DUR}};
   const SEGS = [
-    { id: "hook", label: "Hook", still: "LOGIN",
-      cam: [[0, 1.4, .5, .626], [3.6, 1.55, .5, .614]], dim: .2,
-      desc: "Screenshot halaman login website (Portal Sign In). Kad login di bahagian atas frame dengan slow push-in, teks hook di bawah supaya website kekal nampak. Camera shake atas impact.",
+    { id: "hook", label: "Hook", still: "LOGIN", blur: 22,
+      cam: [[0, 1.12, .5, .5], [3.6, 1.22, .5, .5]], dim: .55,
+      desc: "Logo LAB reveal (zoom + blur → tajam, impact, glow emas, light sweep) atas latar halaman login yang di-blur. Hujung hook: logo terbang dan mengecil tepat ke logo dalam kad login scene seterusnya (match cut).",
       text: "Hook 2 baris, setiap baris dipegang ~1.5s", sfx: "Impact · whoosh · riser ke potongan" },
-    { id: "login", label: "01 Login", media: "A", in: 0.75, rate: 1, flash: true,
+    { id: "login", label: "01 Login", media: "A", in: 0.75, rate: 1, xf: .5,
       cam: [[0, 1.75, .5, .53], [1.8, 2.0, .52, .56]],
       desc: "Video 3 (00.75–02.55). Push-in perlahan ke kad login. Ring emas pada klik Enter Portal. Email diblur.",
-      text: "01 Login ke portal", sfx: "Flash + whoosh · klik" },
+      text: "01 Login ke portal", sfx: "Swoosh logo · klik" },
     { id: "landing", label: "Masuk", media: "A", in: 2.5, rate: 1, xf: .3,
       cam: [[0, 1.3, .5, .4], [0.8, 1.12, .5, .45]],
       desc: "Video 3 (02.50–03.30). Dashboard masuk, zoom-out perlahan.", text: "", sfx: "Whoosh lembut" },
@@ -444,7 +450,8 @@ vignette=angle=PI/5</pre>
   const SEG = Object.fromEntries(SEGS.map(s => [s.id, s]));
   const DUR = SEGS[SEGS.length - 1].t1, END_T0 = SEG.end.t0;
   const at = (id, off) => off < 0 ? SEG[id].t1 + off : SEG[id].t0 + off; // negative offset = from shot end
-  const HOOK_LINES = [[.15, 1.65], [1.8, 3.45]];
+  const HOOK_LINES = [[.4, 1.7], [1.8, 3.2]];
+  const LOGO_LAND = .45, LOGO_MOVE = [3.05, .55]; // hook-relative: logo lands, then flies into the login card (start, length)
 
   const TEXTS = [
     { t0: at("login", .15), t1: at("login", -.05), html: "<b>01</b> Login ke portal" },
@@ -475,7 +482,7 @@ vignette=angle=PI/5</pre>
   const CHAPTERS = ["login", "strategy", "basic", "advance", "module", "j1", "perf", "lot1", "cur", "news"];
   const SWEEPS = [...CHAPTERS.map(id => SEG[id].t0), END_T0 + .3];
   const FLASHES = SEGS.filter(s => s.flash).map(s => s.t0);
-  const SHAKES = [0.05, HOOK_LINES[1][0], END_T0];
+  const SHAKES = [LOGO_LAND, HOOK_LINES[1][0], END_T0];
 
   // card crops from the syllabus screenshots (source px)
   const CARDSETS = {
@@ -487,7 +494,8 @@ vignette=angle=PI/5</pre>
   const CARD_START = .4, CARD_GAP = .18, CARD_ANIM = .5;
 
   const SFX = [
-    { t: 0.05, k: "impact" }, { t: HOOK_LINES[1][0] - .1, k: "whoosh" }, { t: HOOK_LINES[1][0], k: "impact", v: .6 },
+    { t: 0.02, k: "whoosh", v: .7 }, { t: LOGO_LAND, k: "impact" }, { t: LOGO_LAND + .15, k: "shimmer" },
+    { t: HOOK_LINES[1][0] - .1, k: "whoosh" }, { t: HOOK_LINES[1][0], k: "impact", v: .6 },
     { t: SEG.login.t0 - 1.0, k: "riser", d: 1.0 }, { t: END_T0, k: "impact" }, { t: END_T0 + .3, k: "shimmer" },
     ...SEGS.filter(s => s.flash && s.t0 > 0).map(s => ({ t: s.t0 - .05, k: "whoosh" })),
     ...SEGS.filter(s => s.xf).map(s => ({ t: s.t0 - s.xf, k: "whoosh", v: CHAPTERS.includes(s.id) ? .8 : .45 })),
@@ -555,6 +563,7 @@ vignette=angle=PI/5</pre>
         const im = document.createElement("img"); im.className = "media"; im.alt = ""; im.src = ASSETS[s.still];
         im.width = STILLS[s.still].w; im.height = STILLS[s.still].h; L.appendChild(im); s.im = im;
         const d = document.createElement("div"); d.className = "dim"; L.appendChild(d); s.dimEl = d;
+        if (s.blur) im.style.filter = `blur(${s.blur}px)`; // inline: a soft backdrop, so it skips the grade filter
       } else if (s.media) {
         const v = document.createElement("video");
         v.className = "media"; v.muted = true; v.playsInline = true; v.preload = "auto";
@@ -592,6 +601,10 @@ vignette=angle=PI/5</pre>
     });
     fixCounters(); if (document.fonts) document.fonts.ready.then(fixCounters);
     for (const r of RINGS) { const el = document.createElement("div"); el.className = "ring"; fx.appendChild(el); r.el = el; }
+    const hl = document.createElement("div"); hl.id = "hookLogo";
+    hl.innerHTML = `<img alt="" src="${ASSETS.LOGO_HOOK}"><div class="shine"></div>`;
+    hl.lastChild.style.webkitMaskImage = hl.lastChild.style.maskImage = `url(${ASSETS.LOGO_HOOK})`;
+    txt.prepend(hl);
     buildHook();
   }
 
@@ -655,6 +668,31 @@ vignette=angle=PI/5</pre>
       }
     }
 
+    // hook logo: reveal, idle drift, then match-cut into the logo on the login card
+    {
+      const hl = $("hookLogo"), L = SEG.login, ht = t - SEG.hook.t0;
+      if (!hl || t > L.t0 + .3) { if (hl) hl.style.opacity = 0; }
+      else {
+        const land = eout(clamp(ht / LOGO_LAND, 0, 1));
+        const bump = Math.max(0, 1 - Math.abs(ht - HOOK_LINES[1][0]) / .3);
+        let w = 430 * lerp(1.55, 1, land) * (1 + .05 * clamp((ht - LOGO_LAND) / (LOGO_MOVE[0] - LOGO_LAND), 0, 1)) * (1 + .035 * bump);
+        let cx = 640, cy = 250;
+        const mv = eio(clamp((ht - LOGO_MOVE[0]) / LOGO_MOVE[1], 0, 1));
+        if (mv > 0) { // where the logo sits on the login card under the login shot's camera
+          const [s2, fx2, fy2] = camAt(L, Math.max(0, t - L.t0)), P = place(MEDIA.A, s2, fx2, fy2);
+          cx = lerp(cx, P.x + .4977 * MEDIA.A.w * P.sc, mv); cy = lerp(cy, P.y + .359 * MEDIA.A.h * P.sc, mv);
+          w = lerp(w, .046 * MEDIA.A.w * P.sc, mv);
+        }
+        const hgt = w * LOGO_HOOK_AR;
+        const glow = Math.max(Math.max(0, 1 - Math.abs(ht - LOGO_LAND) / .6), bump * .8) * (1 - mv);
+        hl.style.width = w + "px";
+        hl.style.transform = `translate(${cx - w / 2}px,${cy - hgt / 2}px)`;
+        hl.style.opacity = clamp(ht / .3, 0, 1) * (1 - clamp((t - L.t0) / .3, 0, 1));
+        hl.firstChild.style.filter = `blur(${(1 - land) * 14}px) drop-shadow(0 0 ${8 + 30 * glow}px rgba(246,196,26,${.25 + .55 * glow}))`;
+        const sp = clamp((ht - .35) / .8, 0, 1);
+        hl.lastChild.style.backgroundPosition = `${lerp(120, -20, sp)}% 0`; hl.lastChild.style.opacity = sp > 0 && sp < 1 ? 1 : 0;
+      }
+    }
     // hook text: per-word punch
     txt.querySelectorAll(".hook").forEach(el => {
       const i = +el.dataset.i, [a, b] = HOOK_LINES[i], on = t >= a && t < b;
