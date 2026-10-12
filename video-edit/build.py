@@ -6,6 +6,11 @@ HERE = pathlib.Path(__file__).parent
 ASSETS = {
     "A": ("assets/A.mp4", "video/mp4"),
     "B": ("assets/B.mp4", "video/mp4"),
+    "C": ("assets/C.mp4", "video/mp4"),
+    "D": ("assets/D.mp4", "video/mp4"),
+    "E": ("assets/E.mp4", "video/mp4"),
+    "F": ("assets/F.mp4", "video/mp4"),
+    "G": ("assets/G.mp4", "video/mp4"),
     "BASIC": ("assets/basic.webp", "image/webp"),
     "ADV": ("assets/adv.webp", "image/webp"),
     "LOGO": ("assets/logo_alpha.png", "image/png"),
